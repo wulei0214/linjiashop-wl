@@ -7,6 +7,7 @@ import cn.enilu.flash.dao.system.CfgRepository;
 import cn.enilu.flash.service.BaseService;
 import cn.enilu.flash.utils.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class CfgService extends BaseService<Cfg, Long, CfgRepository> {
     @Autowired
     private ConfigCache configCache;
+
+    // 从配置文件中读取文件上传路径
+    @Value("${system.file.upload.path:}")
+    private String fileUploadPath;
 
     /**
      * 切记更新配置的时候调用该方法，而不要调用其父类的insert或者update方法，该方法会连同缓存一起更新
@@ -60,6 +65,10 @@ public class CfgService extends BaseService<Cfg, Long, CfgRepository> {
      * @return
      */
     public String getCfgValue(String cfgName) {
+        // 优先使用配置文件中的值（用于 Windows 本地部署）
+        if ("system.file.upload.path".equals(cfgName) && fileUploadPath != null && !fileUploadPath.isEmpty()) {
+            return fileUploadPath;
+        }
 //        return configCache.get(cfgName);
         return getByCfgName(cfgName).getCfgValue();
     }
