@@ -270,6 +270,52 @@ npm run dev
 - 检查 MySQL 是否启动
 - 检查 application-dev.properties 中的用户名密码是否正确
 
+**Q5: 数据库中文乱码问题？**
+
+问题描述：通过 Navicat 导入 SQL 文件后，数据库数据正常，但前端页面显示乱码。
+
+解决方案：
+
+1. 重新导入数据库（推荐）：
+```sql
+-- 登录 MySQL
+mysql -u root -p
+
+-- 重建数据库（确保使用 utf8mb4 字符集）
+DROP DATABASE IF EXISTS linjiashop;
+CREATE DATABASE linjiashop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE linjiashop;
+
+-- 设置客户端编码
+SET NAMES utf8mb4;
+
+-- 导入 SQL 文件（路径根据实际情况修改）
+source F:/ProgramFiles/linjiashop/doc/database.sql
+```
+
+2. 配置修改：确保 application-dev.properties 中的字符集配置正确：
+```properties
+# JDBC 连接字符集
+spring.datasource.url=jdbc:mysql://localhost:3306/linjiashop?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+
+# Hibernate 字符集配置
+spring.jpa.properties.hibernate.connection.characterEncoding=utf-8
+spring.jpa.properties.hibernate.connection.useUnicode=true
+```
+
+**Q6: 图片不显示问题？**
+
+问题描述：将项目从 C 盘移动到其他盘后，图片无法显示。
+
+解决方案：
+
+1. 修改文件上传路径配置（见上文「三、本地部署步骤」中的「3. 修改文件上传路径」）
+2. 更新数据库中的配置：
+```sql
+UPDATE t_sys_cfg SET cfg_value = '新路径/runtime/upload' WHERE cfg_name = 'system.file.upload.path';
+```
+或登录后台管理系统，进入「系统管理」→「参数管理」页面修改。
+
 ## 技术交流
 - qq群仅为方便网友互相交流，作者基本不会在群里回复，如果需要跟作者提问题，可以通过项目主页提issue；qq群禁止发广告，发者立删;为了提高加群门槛，请先通过下面链接打赏后加项目作者qq(82552623)，并将打赏截图发过去，作者将邀请你进群，[打赏链接](http://linjiashop.enilu.cn/linjiashop/donate.html),打赏金额随缘
 
