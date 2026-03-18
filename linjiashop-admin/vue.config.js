@@ -33,6 +33,10 @@ module.exports = {
       warnings: false,
       errors: true
     },
+    // 解决中文乱码问题
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
     proxy: {
       [process.env.VUE_APP_BASE_API]: {
         target: `http://localhost:8082`,

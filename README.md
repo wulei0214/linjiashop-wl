@@ -111,44 +111,164 @@ _商品素材取自小米商城_
 
 
 ## 快速开始
-- 克隆本项目
-- 导入idea或者eclipse
-- 确保开发工具下载并安装了lombok插件，另外由于lombok有版本差异，如果出现问题，可以更新maven以来中lombok的版本来解决
-- 创建数据库：linjiashop
-     ```sql
-    CREATE DATABASE IF NOT EXISTS linjiashop DEFAULT CHARSET utf8 COLLATE utf8_general_ci; 
-    CREATE USER 'linjiashop'@'%' IDENTIFIED BY 'linjiaSHOP@191028';
-    GRANT ALL privileges ON linjiashop.* TO 'linjiashop'@'%';
-    flush privileges;
-    ```
-- 下载项目测试数据的图片：链接：https://pan.baidu.com/s/1i06H4dAM1M7mYQU9etBrfw  提取码：mqvf  ，将图片存放到t_sys_cfg表中system.file.upload.path配置的目录下(注意该目录为绝对路径，该目录可以通过“系统管理”-“参数管理”进行配置)
-- 启动后台管理
-    - 启动后台管理api服务:linjiashop-admin-api
-        - 修改linjiashop-admin-api中数据库连接配置
-            ```properties
-            ## 首次启动需要设置下列配置项设置为create，以便系统可以自动创建表并导入./import.sql测试数据文件
-            ## 如果下面配置无法自动建表并导入测试数据文件；则可以手动初始化数据库，手动使用的初始化文件文件位于：doc/database.sql
-            spring.jpa.hibernate.ddl-auto=create
-            ```
-        - 启动linjiashop-admin-api主类：cn.enilu.flash.api.AdminApiApplication，访问http://localhost:8082/swagger-ui.html ， 保证api服务启动成功
-    - 启动后台管理的前端界面:linjiashop-admin
-        - 运行 npm install --registry=https://registry.npmmirror.com
-        - 运行npm run dev
-        - 启动成功后访问 http://localhost:9528 ,登录，用户名密码:admin/admin 
-- 启动手机端商城
-    - 启动手商城的api服务:linjiashop-mobile-api   
-        - 修改linjiashop-mobile-api中数据库连接欸配置
-        - 启动linjiashop-mobile-api主类：cn.enilu.flash.MobileApiApplication,访问http://localhost:8081/swagger-ui.html ， 保证api服务启动成功
-    - 启动手机商城的前端:linjiashop-mobile
-        - 运行 npm install --registry=https://registry.npmmirror.com
-        - 运行npm run dev
-        - 启动成功后访问 http://localhost:8080/#/index
-- 微信小程序开发
-    - 首先启动后台api服务，和h5公用一个后台服务，即：linjiashop-mobile-api
-    - 进入linjiashop-wxapp目录
-        - 运行  npm install --registry=https://registry.npmmirror.com
-        - 运行npm run dev
-        - 启动微信开发工具导入linjiashop-wxapp/dist/wx 目录即可预览小程序
+
+### 一、环境要求
+
+| 工具 | 版本要求 |
+|------|----------|
+| JDK | 1.8+ |
+| Maven | 3.6+ |
+| Node.js | 14.x 或 16.x |
+| MySQL | 5.7+ |
+| IDE | IntelliJ IDEA / VSCode |
+
+### 二、目录结构
+
+```
+linjiashop/                          # 项目根目录
+├── linjiashop-admin/                # 后台管理前端（Vue + Element UI）
+├── linjiashop-admin-api/             # 后台管理后端 API（Spring Boot）
+├── linjiashop-mobile/                # 手机端前端（Vue + Vant）
+├── linjiashop-mobile-api/            # 手机端后端 API（Spring Boot）
+├── linjiashop-wxapp/                 # 微信小程序
+├── linjiashop-core/                  # 核心模块（公共代码）
+├── linjiashop-generator/             # 代码生成模块
+└── pom.xml                           # Maven 父项目配置
+```
+
+### 三、本地部署步骤
+
+#### 1. 初始化数据库
+
+```sql
+-- 登录 MySQL
+mysql -u root -p
+
+-- 创建数据库
+CREATE DATABASE IF NOT EXISTS linjiashop DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 创建用户（可选，也可以直接用 root 用户）
+CREATE USER 'linjiashop'@'localhost' IDENTIFIED BY 'linjiashop';
+GRANT ALL PRIVILEGES ON linjiashop.* TO 'linjiashop'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+#### 2. 修改数据库配置
+
+编辑文件：`linjiashop-admin-api/src/main/resources/application-dev.properties`
+
+```properties
+# 修改以下配置为你的数据库信息
+spring.datasource.url=jdbc:mysql://localhost:3306/linjiashop?useUnicode=true&characterEncoding=UTF8&useSSL=false
+spring.datasource.username=root
+spring.datasource.password=123456
+```
+
+同理修改 `linjiashop-mobile-api/src/main/resources/application-dev.properties` 中的数据库配置。
+
+#### 3. 修改文件上传路径（重要！）
+
+**如果你移动了项目位置，必须修改此项，否则图片无法显示！**
+
+编辑文件：
+- `linjiashop-admin-api/src/main/resources/application-dev.properties`
+- `linjiashop-mobile-api/src/main/resources/application-dev.properties`
+
+添加或修改以下配置（路径根据你的实际项目位置调整）：
+
+```properties
+# 文件上传路径（Windows 本地部署）
+# 格式：盘符:/项目路径/runtime/upload
+system.file.upload.path=F:/Program Files/linjiashop/runtime/upload
+```
+
+> **注意**：如果数据库已经初始化过，还需要更新数据库中的配置。执行以下 SQL：
+> ```sql
+> UPDATE t_sys_cfg SET cfg_value = 'F:/Program Files/linjiashop/runtime/upload' WHERE cfg_name = 'system.file.upload.path';
+> ```
+> 或者登录后台管理系统，进入「系统管理」→「参数管理」页面，修改 `system.file.upload.path` 的值为新路径。
+
+#### 4. 构建后端项目
+
+在项目根目录执行：
+
+```bash
+cd F:\Program Files\linjiashop
+mvn install -DskipTests
+```
+
+**注意**：首次构建如果报错，可能需要多执行几次直到成功。
+
+#### 5. 启动后端服务
+
+**后台管理 API（端口 8082）**：
+
+```bash
+cd linjiashop-admin-api
+mvn spring-boot:run
+```
+
+**手机端 API（端口 8081）**：
+
+```bash
+cd linjiashop-mobile-api
+mvn spring-boot:run
+```
+
+#### 6. 启动前端
+
+**解决 Node.js 兼容性问题**（如果是 Node.js 17+ 版本）：
+
+```bash
+# 在终端中设置环境变量
+set NODE_OPTIONS=--openssl-legacy-provider
+```
+
+**后台管理前端（端口 9528）**：
+
+```bash
+cd linjiashop-admin
+npm install --registry=https://registry.npmmirror.com
+npm run dev
+```
+
+**手机端前端（端口 8080）**：
+
+```bash
+cd linjiashop-mobile
+npm install --registry=https://registry.npmmirror.com
+npm run dev
+```
+
+### 四、访问地址
+
+| 服务 | 地址 | 默认账号 |
+|------|------|----------|
+| 后台管理前端 | http://localhost:9528 | admin / admin |
+| 后台管理 API | http://localhost:8082 | - |
+| 手机端前端 | http://localhost:8080 | 15011112222 / admin |
+| 手机端 API | http://localhost:8081 | - |
+| API 文档 | http://localhost:8082/swagger-ui.html | - |
+
+### 五、常见问题
+
+**Q1: npm install 报 EPERM 权限错误？**
+
+- 以管理员身份运行终端
+- 或修改 npm 缓存目录：`npm config set cache “C:\Users\你的用户名\AppData\Local\npm-cache”`
+
+**Q2: 前端启动报 crypto 错误？**
+
+- 执行 `set NODE_OPTIONS=--openssl-legacy-provider` 后再运行
+
+**Q3: 后端启动报 linjiashop-core 找不到？**
+
+- 在根目录执行 `mvn install -DskipTests` 重新构建
+
+**Q4: 数据库连接失败？**
+
+- 检查 MySQL 是否启动
+- 检查 application-dev.properties 中的用户名密码是否正确
 
 ## 技术交流
 - qq群仅为方便网友互相交流，作者基本不会在群里回复，如果需要跟作者提问题，可以通过项目主页提issue；qq群禁止发广告，发者立删;为了提高加群门槛，请先通过下面链接打赏后加项目作者qq(82552623)，并将打赏截图发过去，作者将邀请你进群，[打赏链接](http://linjiashop.enilu.cn/linjiashop/donate.html),打赏金额随缘

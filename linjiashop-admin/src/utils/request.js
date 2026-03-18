@@ -7,7 +7,22 @@ import router from '@/router'
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   withCredentials: false, // send cookies when cross-domain requests
-  timeout: 30000 // request timeout
+  timeout: 30000, // request timeout
+  // 处理中文乱码
+  transformRequest: [function(data) {
+    // 对 data 进行 UTF-8 编码处理
+    return data
+  }],
+  // 强制使用 UTF-8 编码解析响应
+  responseType: 'json',
+  transformResponse: [function(data) {
+    // 确保响应数据按 UTF-8 解析
+    return data
+  }],
+  headers: {
+    'Content-Type': 'application/json;charset=UTF-8',
+    'Accept': 'application/json;charset=UTF-8'
+  }
 })
 
 // request interceptor
@@ -71,7 +86,7 @@ service.interceptors.response.use(
     }
   },
   error => {
-    if(error.response.status === 401){
+    if(error.response && error.response.status === 401){
       store.dispatch('user/logout').then(()=>{
         router.replace({
           path: '/login',
@@ -80,11 +95,21 @@ service.interceptors.response.use(
       })
       return
     }
-    let errorMsg = ''
+    let errorMsg = '请求失败，请稍后重试'
     try {
-       errorMsg = error.response.data.errors[0].defaultMessage
+      if (error.response && error.response.data) {
+        // 尝试获取错误信息，处理可能的乱码
+        const errorData = error.response.data
+        if (errorData.errors && errorData.errors[0] && errorData.errors[0].defaultMessage) {
+          errorMsg = errorData.errors[0].defaultMessage
+        } else if (errorData.message) {
+          errorMsg = errorData.message
+        } else if (errorData.msg) {
+          errorMsg = errorData.msg
+        }
+      }
     }catch (e) {
-      errorMsg =  error.response.data.message
+      errorMsg = '网络错误，请检查网络连接'
     }
     Message({
       message: errorMsg,

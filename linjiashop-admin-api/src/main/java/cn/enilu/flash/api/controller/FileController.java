@@ -140,19 +140,57 @@ public class FileController extends BaseController {
     @RequestMapping(value="getImgStream",method = RequestMethod.GET)
     public void getImgStream(HttpServletResponse response,
                              @RequestParam("idFile")String  fileName){
-        FileInfo fileInfo = fileService.getByName(fileName);
         FileInputStream fis = null;
-        response.setContentType("image/"+fileInfo.getRealFileName().split("\\.")[1]);
         try {
+            FileInfo fileInfo = fileService.getByName(fileName);
+            if (fileInfo == null) {
+                logger.error("文件不存在: {}", fileName);
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
+            String filePath = fileInfo.getAblatePath();
+            logger.info("读取图片文件: fileName={}, filePath={}", fileName, filePath);
+
+            File file = new File(filePath);
+            if (!file.exists()) {
+                logger.error("文件不存在: {}", filePath);
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
+            // 获取文件扩展名
+            String ext = fileInfo.getRealFileName();
+            String[] parts = ext.split("\\.");
+            String contentType = "image/jpeg";
+            if (parts.length > 1) {
+                String extension = parts[parts.length - 1].toLowerCase();
+                if ("png".equals(extension)) {
+                    contentType = "image/png";
+                } else if ("gif".equals(extension)) {
+                    contentType = "image/gif";
+                } else if ("jpg".equals(extension) || "jpeg".equals(extension)) {
+                    contentType = "image/jpeg";
+                } else if ("webp".equals(extension)) {
+                    contentType = "image/webp";
+                } else if ("svg".equals(extension)) {
+                    contentType = "image/svg+xml";
+                }
+            }
+
+            response.setContentType(contentType);
             OutputStream out = response.getOutputStream();
-            File file = new File(fileInfo.getAblatePath());
+
             fis = new FileInputStream(file);
             byte[] b = new byte[fis.available()];
             fis.read(b);
             out.write(b);
             out.flush();
+
+            logger.info("图片读取成功: {}", filePath);
         } catch (Exception e) {
-            logger.error("getImgStream error",e);
+            logger.error("getImgStream error: ", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             if (fis != null) {
                 try {

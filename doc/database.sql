@@ -13,6 +13,11 @@ File Encoding         : 65001
 Date: 2022-07-25 14:19:57
 */
 
+-- 创建数据库并指定字符集（解决中文乱码问题）
+DROP DATABASE IF EXISTS linjiashop;
+CREATE DATABASE linjiashop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE linjiashop;
+
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
