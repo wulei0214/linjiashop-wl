@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr 9528)",
+      "Bash(mvn clean:*)",
+      "WebFetch(domain:minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(cmd /c \"rd /s /q C:\\\\Users\\\\wu''lei\\\\.m2\\\\repository\\\\cn\\\\enilu\\\\linjiashop-generator\\\\1.0\")",
+      "Read(//c/Users/wu''''lei/.m2/repository/cn/enilu/**)",
+      "Read(//c/Users/wu''lei/.m2/repository/cn/enilu/linjiashop/**)"
+    ]
+  }
+}
