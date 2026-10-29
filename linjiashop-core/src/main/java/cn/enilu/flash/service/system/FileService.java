@@ -18,6 +18,7 @@ import org.jxls.util.JxlsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +39,49 @@ public class FileService extends BaseService<FileInfo,Long,FileInfoRepository> {
     @Autowired
     private TokenCache tokenCache;
 
+    // 直接从配置文件读取上传路径
+    @Value("${system.file.upload.path:}")
+    private String configUploadPath;
+
+    /**
+     * 获取文件上传路径
+     * 优先使用配置文件中的路径
+     */
+    private String getUploadPath() {
+        String path = null;
+        // 优先使用配置文件中的值
+        if (configUploadPath != null && !configUploadPath.isEmpty()) {
+            path = configUploadPath;
+        } else {
+            path = cfgService.getCfgValue(CfgKey.SYSTEM_FILE_UPLOAD_PATH);
+        }
+        // 处理 properties 文件中的单引号转义问题
+        if (path != null && path.contains("''")) {
+            path = path.replace("''", "'");
+        }
+        logger.info("获取上传路径: {}", path);
+        return path;
+    }
+
+    /**
+     * 获取文件的完整路径
+     */
+    private String getFilePath(String fileName) {
+        String uploadPath = getUploadPath();
+        if (uploadPath == null || uploadPath.isEmpty()) {
+            logger.error("上传路径为空！");
+            return null;
+        }
+        // 统一使用正斜杠处理路径
+        String normalizedPath = uploadPath.replace("\\", "/");
+        if (!normalizedPath.endsWith("/")) {
+            normalizedPath = normalizedPath + "/";
+        }
+        String fullPath = normalizedPath + fileName;
+        logger.info("获取文件路径: uploadPath={}, fileName={}, fullPath={}", uploadPath, fileName, fullPath);
+        return fullPath;
+    }
+
     /**
      * 文件上传
      * @param multipartFile
@@ -49,7 +93,8 @@ public class FileService extends BaseService<FileInfo,Long,FileInfoRepository> {
         String realFileName =   uuid +"."+ originalFileName.split("\\.")[originalFileName.split("\\.").length-1];
         try {
 
-            File file = new File(cfgService.getCfgValue(CfgKey.SYSTEM_FILE_UPLOAD_PATH) + File.separator+realFileName);
+            String fullPath = getFilePath(realFileName);
+            File file = new File(fullPath);
             if (!file.getParentFile().exists()) {
                 file.getParentFile().mkdirs();
             }
@@ -72,7 +117,8 @@ public class FileService extends BaseService<FileInfo,Long,FileInfoRepository> {
         String originalFileName = base64File.getName();
         String realFileName =   uuid +"."+ originalFileName.split("\\.")[originalFileName.split("\\.").length-1];
         try {
-            File file = new File(cfgService.getCfgValue(CfgKey.SYSTEM_FILE_UPLOAD_PATH) + File.separator+realFileName);
+            String fullPath = getFilePath(realFileName);
+            File file = new File(fullPath);
             if(base64ToFile(base64File.getBase64(),file)){
                 return save(originalFileName,file);
             }
@@ -125,7 +171,8 @@ public class FileService extends BaseService<FileInfo,Long,FileInfoRepository> {
      */
     public FileInfo createExcel(String template, String fileName, Map<String, Object> data){
         FileOutputStream outputStream = null;
-        File file = new File(cfgService.getCfgValue(CfgKey.SYSTEM_FILE_UPLOAD_PATH) + File.separator+UUID.randomUUID().toString()+".xlsx");
+        String fullPath = getFilePath(UUID.randomUUID().toString() + ".xlsx");
+        File file = new File(fullPath);
         try {
 
             // 定义输出类型
@@ -184,13 +231,17 @@ public class FileService extends BaseService<FileInfo,Long,FileInfoRepository> {
     @Cacheable(value = Cache.APPLICATION, key = "'" + CacheKey.FILE_INFO + "'+#id")
     public FileInfo get(Long id){
         FileInfo fileInfo = fileInfoRepository.getOne(id);
-        fileInfo.setAblatePath(cfgService.getCfgValue(CfgKey.SYSTEM_FILE_UPLOAD_PATH) + File.separator+fileInfo.getRealFileName());
+        if (fileInfo != null) {
+            fileInfo.setAblatePath(getFilePath(fileInfo.getRealFileName()));
+        }
         return fileInfo;
     }
 
     public FileInfo getByName(String fileName) {
         FileInfo fileInfo =  get(SearchFilter.build("realFileName",fileName));
-        fileInfo.setAblatePath(cfgService.getCfgValue(CfgKey.SYSTEM_FILE_UPLOAD_PATH) + File.separator+fileInfo.getRealFileName());
+        if (fileInfo != null) {
+            fileInfo.setAblatePath(getFilePath(fileInfo.getRealFileName()));
+        }
         return fileInfo;
     }
 }
