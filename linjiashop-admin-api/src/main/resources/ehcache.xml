@@ -86,6 +86,15 @@
            overflowToDisk="false"
            memoryStoreEvictionPolicy="LFU" />
 
+    <!--被强制下线的token黑名单：保留2小时，大于token有效期(30分钟)+刷新窗口(60分钟)-->
+    <cache name="KICK"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="7200"
+           timeToLiveSeconds="7200"
+           overflowToDisk="false"
+           memoryStoreEvictionPolicy="LFU" />
+
 </ehcache>
 
     <!--

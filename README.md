@@ -194,10 +194,14 @@ system.file.upload.path=F:/Program Files/linjiashop/runtime/upload
 
 ```bash
 cd F:\Program Files\linjiashop
-mvn install -DskipTests
+mvn install -DskipTests -Dspring-boot.repackage.skip=true -pl linjiashop-core,linjiashop-mobile-api,linjiashop-admin-api
 ```
 
-**注意**：首次构建如果报错，可能需要多执行几次直到成功。
+**重要说明**：不能直接使用 `mvn install -DskipTests` 全量构建。父 pom 对所有模块统一应用了
+spring-boot-maven-plugin 的 repackage 目标，而 `linjiashop-generator`、`linjiashop-core`
+模块里存在多个 main 类，repackage 阶段会报 "Unable to find a single main class" 导致构建失败。
+因此只构建运行所需的 3 个模块，并用 `-Dspring-boot.repackage.skip=true` 跳过 repackage
+（本地用 `mvn spring-boot:run` 启动，不需要打 fat jar）。
 
 #### 5. 启动后端服务
 
@@ -217,28 +221,27 @@ mvn spring-boot:run
 
 #### 6. 启动前端
 
-**解决 Node.js 兼容性问题**（如果是 Node.js 17+ 版本）：
-
-```bash
-# 在终端中设置环境变量
-set NODE_OPTIONS=--openssl-legacy-provider
-```
+本机使用 Node.js 16.20.2 绿色版（解压在 `F:\DevCache\nodejs\node-v16.20.2-win-x64`，未加入系统 PATH，
+启动前在终端里把该目录加入 PATH 即可）。
 
 **后台管理前端（端口 9528）**：
 
 ```bash
 cd linjiashop-admin
-npm install --registry=https://registry.npmmirror.com
-npm run dev
+# 注意：package.json 的 dev 脚本写死了 NODE_OPTIONS=--openssl-legacy-provider，
+# 该参数只有 Node 17+ 支持，Node 16 会直接报错退出，因此绕过脚本直接启动：
+./node_modules/.bin/vue-cli-service serve
 ```
 
 **手机端前端（端口 8080）**：
 
 ```bash
 cd linjiashop-mobile
-npm install --registry=https://registry.npmmirror.com
 npm run dev
 ```
+
+> Node 17+ 的处理方式：admin 前端可直接 `npm run dev`（脚本自带的 openssl-legacy-provider 参数正是为 17+ 准备的）；
+> mobile 前端在 Node 17+ 下需先 `set NODE_OPTIONS=--openssl-legacy-provider` 再 `npm run dev`。
 
 ### 四、访问地址
 
@@ -250,16 +253,39 @@ npm run dev
 | 手机端 API | http://localhost:8081 | - |
 | API 文档 | http://localhost:8082/swagger-ui.html | - |
 
-### 五、常见问题
+### 五、运维管理模块
+
+后台「运维管理」菜单提供以下功能（对齐主流后台如 RuoYi 的系统监控设计）：
+
+| 功能 | 说明 | 实现位置 |
+|------|------|----------|
+| 服务器监控 | CPU / 内存 / 操作系统 / JVM / 磁盘使用情况，10 秒自动刷新 | 后端 `/monitor/server`，前端 `views/operation/server` |
+| 在线用户 | 展示当前登录会话（账号/部门/角色/登录时间/有效期），支持按账号搜索、**强制下线** | 后端 `/monitor/online/list`、`/monitor/online/kick`，前端 `views/operation/online` |
+| 缓存监控 | Ehcache 各缓存区条目数、内存占用、命中统计，30 秒自动刷新 | 后端 `/monitor/cache`，前端 `views/operation/cache` |
+| 数据库监控 | 内嵌 Druid 监控台（账号 `druiduser` / `druidpassword`，见 application.properties） | 前端 `views/operation/druid`，代理配置见 vue.config.js `/druid` |
+| 接口文档 | 内嵌 Swagger UI，标签页切换后台管理 API（8082）/ 移动端 API（8081） | 前端 `views/operation/api`，代理配置 `/dev-api`、`/mobile-api` |
+
+**强制下线实现说明**：项目为 JWT 无状态认证，被踢出的 token 本身仍然签名有效。
+因此在 `TokenCache` 中引入 KICK 黑名单缓存（保留 2 小时，大于 token 有效期+刷新窗口），
+`ApiRealm` 认证时校验黑名单，被强制下线的 token 立即失效。新增缓存区需在
+`linjiashop-admin-api` 与 `linjiashop-mobile-api` 的 `ehcache.xml` 中同时声明。
+
+**生产部署提示**：接口文档与数据库监控页面通过前端代理访问后端，生产环境 nginx 需要
+配置对应的转发规则：`/prod-api`（后台 API）、`/druid`（Druid 监控台，Druid 的 302 跳转
+按 Host 头构造绝对地址，需保留前端 Host 转发）、`/mobile-api`（移动端 API）。
+
+### 六、常见问题
 
 **Q1: npm install 报 EPERM 权限错误？**
 
 - 以管理员身份运行终端
 - 或修改 npm 缓存目录：`npm config set cache “C:\Users\你的用户名\AppData\Local\npm-cache”`
 
-**Q2: 前端启动报 crypto 错误？**
+**Q2: 前端启动报 crypto / openssl 错误？**
 
-- 执行 `set NODE_OPTIONS=--openssl-legacy-provider` 后再运行
+- Node.js 17+：执行 `set NODE_OPTIONS=--openssl-legacy-provider` 后再运行
+- Node.js 16：admin 前端不要用 `npm run dev`（其脚本写死了该参数，Node 16 不支持），改用
+  `./node_modules/.bin/vue-cli-service serve` 直接启动，详见「快速开始 → 启动前端」
 
 **Q3: 后端启动报 linjiashop-core 找不到？**
 
@@ -315,6 +341,57 @@ spring.jpa.properties.hibernate.connection.useUnicode=true
 UPDATE t_sys_cfg SET cfg_value = '新路径/runtime/upload' WHERE cfg_name = 'system.file.upload.path';
 ```
 或登录后台管理系统，进入「系统管理」→「参数管理」页面修改。
+
+## 本地修改与清理记录
+
+> 以下为本机（2026-10-30）部署调试时的代码修改与文件清理记录，供后续维护参考。
+
+### 1. 修复：Shiro 1.11 拦截中文路径接口，用户管理页弹 "Invalid request"
+
+**现象**：进入后台「系统管理 → 用户管理」页面时，右上角弹出红色 `Invalid request` 提示，
+性别下拉框无选项；用户列表等其他功能正常。
+
+**根因**：父 pom 中 Shiro 版本为 1.11.0。Shiro 1.10+ 默认对所有请求启用 `InvalidRequestFilter`
+（官方安全加固），URI 包含非 ASCII 字符（如中文）时直接拒绝并返回 400 "Invalid request"。
+用户管理页的性别下拉框（DictSelect 组件）加载时会请求 `GET /dict/getDicts/性别`，
+路径中的中文「性别」恰好命中该规则，前端 axios 拦截器把这个 400 的 message 弹成了提示。
+
+**修改**：`linjiashop-admin-api/src/main/java/cn/enilu/flash/api/config/ShiroConfig.java`
+在 shiroFilter 的 filterMap 中注册同名 `invalidRequest` 过滤器覆盖默认全局行为，
+仅关闭非 ASCII 拦截，分号/反斜杠拦截保持开启：
+
+```java
+InvalidRequestFilter invalidRequestFilter = new InvalidRequestFilter();
+invalidRequestFilter.setBlockNonAscii(false);
+filterMap.put("invalidRequest", invalidRequestFilter);
+```
+
+**验证**：重启 admin-api 后，`/dict/getDicts/性别` 返回 200 及字典数据（男/女），
+页面红色提示消失，下拉框选项正常。
+
+**影响范围**：仅 admin-api。全项目只有用户管理页使用 dict-select（中文路径字典接口），
+mobile-api 未做改动。
+
+### 2. 清理：删除冗余文件与目录
+
+以下内容不参与 Maven 构建和前端运行，属于误留的冗余文件，已删除
+（git 索引中的对应 gitlink 条目已一并移除，尚未提交，需要时可 `git commit` 固化）：
+
+| 文件/目录 | 说明 |
+|-----------|------|
+| `linjiashop/`（内层目录） | 上游项目的完整克隆（gitlink 子模块引用），构建不引用，还会干扰 IDE |
+| `linjiashop-wl/`、`linjiashop-wl-1/` | 误留的项目说明副本（gitlink 引用，各含一个 README.md） |
+| `hello.py` | 与项目无关的测试脚本 |
+| `package-lock.json`（根目录） | 空的 lockfile（packages 为空），且已被 .gitignore 忽略 |
+
+### 3. 本机运行环境速查
+
+| 组件 | 位置/版本 |
+|------|-----------|
+| JDK | 1.8.0_162（系统默认 java） |
+| Maven | 3.9.1，`D:\maven\apache-maven-3.9.1`，本地仓库 `F:\DevCache\.m2\repository` |
+| MySQL | 8.0.33，`D:\MYSQL\mysql-8.0.33-winx64`，端口 3306，root/123456，库名 `linjiashop` |
+| Node.js | 16.20.2 绿色版，`F:\DevCache\nodejs\node-v16.20.2-win-x64`（未加入系统 PATH） |
 
 ## 技术交流
 - qq群仅为方便网友互相交流，作者基本不会在群里回复，如果需要跟作者提问题，可以通过项目主页提issue；qq群禁止发广告，发者立删;为了提高加群门槛，请先通过下面链接打赏后加项目作者qq(82552623)，并将打赏截图发过去，作者将邀请你进群，[打赏链接](http://linjiashop.enilu.cn/linjiashop/donate.html),打赏金额随缘

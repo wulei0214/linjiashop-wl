@@ -1,6 +1,7 @@
 package cn.enilu.flash.security;
 
 import cn.enilu.flash.bean.core.AuthorizationUser;
+import cn.enilu.flash.cache.TokenCache;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -24,6 +25,8 @@ public class ApiRealm extends AuthorizingRealm {
     @Lazy
     @Autowired
     private UserService userService;
+    @Autowired
+    private TokenCache tokenCache;
 
 
     /**
@@ -70,8 +73,15 @@ public class ApiRealm extends AuthorizingRealm {
             if (!JwtUtil.verify(token,  userBean.getPassword())) {
                 throw new AuthenticationException("Username or password error");
             }
+        }catch (AuthenticationException e){
+            throw  e;
         }catch (Exception e){
             throw  new AuthenticationException(e.getMessage());
+        }
+
+        //被强制下线的token立即失效
+        if (tokenCache.isKicked(token)) {
+            throw new AuthenticationException("token was kicked,please relogin");
         }
 
         return new SimpleAuthenticationInfo(token, token, "my_realm");

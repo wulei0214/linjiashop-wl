@@ -527,6 +527,9 @@ INSERT INTO `t_sys_menu` (`id`, `create_by`, `create_time`, `modify_by`, `modify
 INSERT INTO `t_sys_menu` (`id`, `create_by`, `create_time`, `modify_by`, `modify_time`, `code`, `component`, `hidden`, `icon`, `ismenu`, `isopen`, `levels`, `name`, `num`, `pcode`, `pcodes`, `tips`, `url`) VALUES (86, 1, '2020-1-24 22:21:40', 1, '2020-1-24 22:21:40', 'favorite', 'views/shop/favorite/index', 0, 'favorite', 1, NULL, 2, '收藏列表', 6, 'shopMgr', '[0],[shopMgr],', NULL, '/favorite');
 INSERT INTO `t_sys_menu` (`id`, `create_by`, `create_time`, `modify_by`, `modify_time`, `code`, `component`, `hidden`, `icon`, `ismenu`, `isopen`, `levels`, `name`, `num`, `pcode`, `pcodes`, `tips`, `url`) VALUES (87, 1, '2020-2-9 10:18:33', 1, '2020-2-9 10:18:53', 'express', 'views/system/express/index', 0, 'express', 1, NULL, 2, '物流公司', 7, 'system', '[0],[system]', NULL, '/express');
 INSERT INTO `t_sys_menu` (`id`, `create_by`, `create_time`, `modify_by`, `modify_time`, `code`, `component`, `hidden`, `icon`, `ismenu`, `isopen`, `levels`, `name`, `num`, `pcode`, `pcodes`, `tips`, `url`) VALUES (88, 1, '2020-2-9 10:18:33', 1, '2020-2-9 10:18:53', 'expressEdit', NULL, 0, NULL, 0, NULL, 3, '编辑物流公司', 1, 'express', '[0],[system],[express]', NULL, '/express/edit');
+INSERT INTO `t_sys_menu` (`id`, `create_by`, `create_time`, `modify_by`, `modify_time`, `code`, `component`, `hidden`, `icon`, `ismenu`, `isopen`, `levels`, `name`, `num`, `pcode`, `pcodes`, `tips`, `url`) VALUES (89, 1, '2026-10-30 10:00:00', 1, '2026-10-30 10:00:00', 'server', 'views/operation/server/index', 0, 'server', 1, NULL, 2, '服务器监控', 3, 'operationMgr', '[0],[operationMgr],', NULL, '/server');
+INSERT INTO `t_sys_menu` (`id`, `create_by`, `create_time`, `modify_by`, `modify_time`, `code`, `component`, `hidden`, `icon`, `ismenu`, `isopen`, `levels`, `name`, `num`, `pcode`, `pcodes`, `tips`, `url`) VALUES (90, 1, '2026-10-30 10:00:00', 1, '2026-10-30 10:00:00', 'online', 'views/operation/online/index', 0, 'peoples', 1, NULL, 2, '在线用户', 4, 'operationMgr', '[0],[operationMgr],', NULL, '/online');
+INSERT INTO `t_sys_menu` (`id`, `create_by`, `create_time`, `modify_by`, `modify_time`, `code`, `component`, `hidden`, `icon`, `ismenu`, `isopen`, `levels`, `name`, `num`, `pcode`, `pcodes`, `tips`, `url`) VALUES (91, 1, '2026-10-30 10:00:00', 1, '2026-10-30 10:00:00', 'cache', 'views/operation/cache/index', 0, 'chart', 1, NULL, 2, '缓存监控', 5, 'operationMgr', '[0],[operationMgr],', NULL, '/cache');
 
 -- ----------------------------
 -- Records of t_sys_notice.sql
@@ -642,6 +645,9 @@ INSERT INTO `t_sys_relation` (`id`, `menuid`, `roleid`) VALUES (99, 86, 1);
 INSERT INTO `t_sys_relation` (`id`, `menuid`, `roleid`) VALUES (100, 77, 1);
 INSERT INTO `t_sys_relation` (`id`, `menuid`, `roleid`) VALUES (101, 87, 1);
 INSERT INTO `t_sys_relation` (`id`, `menuid`, `roleid`) VALUES (102, 88, 1);
+INSERT INTO `t_sys_relation` (`id`, `menuid`, `roleid`) VALUES (103, 89, 1);
+INSERT INTO `t_sys_relation` (`id`, `menuid`, `roleid`) VALUES (104, 90, 1);
+INSERT INTO `t_sys_relation` (`id`, `menuid`, `roleid`) VALUES (105, 91, 1);
 
 
 -- ----------------------------

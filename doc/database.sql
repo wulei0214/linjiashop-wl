@@ -1155,6 +1155,9 @@ INSERT INTO `t_sys_menu` VALUES ('85', '1', '2019-07-31 22:04:30', '1', '2019-07
 INSERT INTO `t_sys_menu` VALUES ('86', '1', '2020-01-24 22:21:40', '1', '2020-01-24 22:21:40', 'favorite', 'views/shop/favorite/index', '0', 'favorite', '1', null, '2', '收藏列表', '6', 'shopMgr', '[0],[shopMgr],', null, '/favorite');
 INSERT INTO `t_sys_menu` VALUES ('87', '1', '2020-02-09 10:18:33', '1', '2020-02-09 10:18:53', 'express', 'views/system/express/index', '0', 'express', '1', null, '2', '物流公司', '7', 'system', '[0],[system]', null, '/express');
 INSERT INTO `t_sys_menu` VALUES ('88', '1', '2020-02-09 10:18:33', '1', '2020-02-09 10:18:53', 'expressEdit', null, '0', null, '0', null, '3', '编辑物流公司', '1', 'express', '[0],[system],[express]', null, '/express/edit');
+INSERT INTO `t_sys_menu` VALUES ('89', '1', '2026-10-30 10:00:00', '1', '2026-10-30 10:00:00', 'server', 'views/operation/server/index', '0', 'server', '1', null, '2', '服务器监控', '3', 'operationMgr', '[0],[operationMgr],', null, '/server');
+INSERT INTO `t_sys_menu` VALUES ('90', '1', '2026-10-30 10:00:00', '1', '2026-10-30 10:00:00', 'online', 'views/operation/online/index', '0', 'peoples', '1', null, '2', '在线用户', '4', 'operationMgr', '[0],[operationMgr],', null, '/online');
+INSERT INTO `t_sys_menu` VALUES ('91', '1', '2026-10-30 10:00:00', '1', '2026-10-30 10:00:00', 'cache', 'views/operation/cache/index', '0', 'chart', '1', null, '2', '缓存监控', '5', 'operationMgr', '[0],[operationMgr],', null, '/cache');
 
 -- ----------------------------
 -- Table structure for `t_sys_notice`
@@ -1314,6 +1317,9 @@ INSERT INTO `t_sys_relation` VALUES ('99', '86', '1');
 INSERT INTO `t_sys_relation` VALUES ('100', '77', '1');
 INSERT INTO `t_sys_relation` VALUES ('101', '87', '1');
 INSERT INTO `t_sys_relation` VALUES ('102', '88', '1');
+INSERT INTO `t_sys_relation` VALUES ('103', '89', '1');
+INSERT INTO `t_sys_relation` VALUES ('104', '90', '1');
+INSERT INTO `t_sys_relation` VALUES ('105', '91', '1');
 
 -- ----------------------------
 -- Table structure for `t_sys_role`

@@ -44,6 +44,20 @@ module.exports = {
         pathRewrite: {
           ['^' + process.env.VUE_APP_BASE_API]: ''
         }
+      },
+      // 数据库监控：Druid监控台的302跳转按Host头构造绝对地址（/druid/login.html），
+      // 独立代理保持前端Host，跳转回到前端同源路径，内嵌iframe不跨域；生产环境nginx需配置同样的/druid转发
+      '/druid': {
+        target: `http://localhost:8082`,
+        changeOrigin: false
+      },
+      // 接口文档页面内嵌移动端Swagger时，通过该代理访问本机8081服务；生产环境nginx需配置同样的/mobile-api转发
+      '/mobile-api': {
+        target: `http://localhost:8081`,
+        changeOrigin: true,
+        pathRewrite: {
+          '^/mobile-api': ''
+        }
       }
     },
     after: require('./mock/mock-server.js')

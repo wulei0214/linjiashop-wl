@@ -15,6 +15,7 @@ public interface CacheDao {
     String MINUTE = "MINUTE";
     String HOUR = "HOUR";
     String DAY = "DAY";
+    String KICK = "KICK";
 
     /**
      * 设置hash key值

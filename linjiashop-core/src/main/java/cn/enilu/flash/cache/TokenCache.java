@@ -26,7 +26,28 @@ public   class TokenCache {
     }
 
     public   void remove(String token) {
+        cacheDao.hdel(CacheDao.SESSION,token);
         cacheDao.hdel(CacheDao.SESSION,token+"user");
+    }
+
+    /**
+     * 强制下线：清空token的会话缓存，并加入黑名单使其立即失效
+     */
+    public void kick(String token) {
+        remove(token);
+        cacheDao.hset(CacheDao.KICK, token, System.currentTimeMillis());
+    }
+
+    /**
+     * token是否已被强制下线（拉黑），黑名单保留时间大于token最大有效期
+     */
+    public boolean isKicked(String token) {
+        try {
+            return cacheDao.hget(CacheDao.KICK, token, Long.class) != null;
+        } catch (Exception e) {
+            //KICK缓存未配置等原因导致异常时按未拉黑处理，避免影响正常登录
+            return false;
+        }
     }
 
     public void setUser(String token, AuthorizationUser shiroUser){
